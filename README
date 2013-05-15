@@ -1,0 +1,113 @@
+Intro:
+Core Balance is a TCP Load Balancing proxy.
+It's goal, unlike many load balancing proxies, is
+to balance based upon the node speed and available
+processing cores.  This program was writting primarily
+for use with distcc.  The idea stemmed from
+having a cluster of machines running distcc and
+having absolutely no way to utilize my nodes from
+outside of the cluster's private subnet.  I did
+a little looking around and found TCPBalance,
+copyrighted to Caspian Networks, Inc.  This
+temporarily solved my problem as it was designed
+to do excatly what I needed; however, TCPBalance
+is written in a language called Erlang.  This
+made me very uncomfortable. I do not like the idea
+of having to install a whole run-time environment
+just to be able to use a single program or to have
+to learn a new language (that I'll probably never
+use anywhere else) just to modify it's behavior.
+Not to mention the strange behaviors I have
+noticed from TCPBalance, such as parts of the
+program seeming to hang while others kept working
+fine.
+
+Function:
+Core Balance is designed to read a configuration file
+listing all nodes to balance between.
+The format is as follows:
+
+<host>, <port>, <cores>, <flags>
+
+<host>	is either an IP address or resolvable host name
+<port>	is the port on the node that connection requests
+	should be sent to
+<cores>	is the number of processing cores (or just max
+	simultaneous connections)
+<flags>	should be set to 0 (zero) as no flags are defined
+	yet except BN_DOWN (0x80000000) signifying a node
+	is unavailable.
+
+Operation:
+The mode of operation is as follows:
+Upon connection request, search through nodes and
+find a node with current connections less than
+maximum connections that is not marked as unavailable.
+If no node is found, the connection remains in the
+queue until a node frees up.
+If a node is found, a connection is made to the node
+and data is forwarded between the two connections.
+
+Features:
+A "watching" port can be used (-w <port) to serve a
+status report in HTTP as well as an interactive mode
+(-i) that supports very crude input from the command
+line.
+	b	--	lists balance nodes
+	c	--	lists connection nodes
+	t	--	lists thread nodes (or just
+			the single work count for
+			non-threaded builds)
+	v#	--	change verbosity level to #
+
+Input can run together on a single line or be split by
+lines or any other unrecognized character.  Line parsing
+begins after a newline.
+
+Threading:
+If this program is compiled with _NO_THREADS defined
+(-D_NO_THREADS), it will produce a binary that does
+not link against libpthread and has no threading
+capabilities. This is useful if it is being built on
+a single core machine where there is no reason for
+multiple threads and removing the mutex checks might
+actually increase performance.
+If this program is compiled normally, it defaults to
+using two threads as most machines are dual core now.
+NOTE:	If compiled normally and run with only one thread
+	(-t 1), it will behave almost identically to the
+	non-threaded build except it will still lock and
+	unlock mutexes in the same manner as if it were
+	threaded.
+
+Comming Improvements:
+Future additions will include real-time modification
+of the node list to include insertion, removal, and
+changing node availability status. A timing function
+should be added as well to have (optionally) an
+unavailable node timeout such that after a node has
+been marked unavailable for a user defined time period,
+it should be marked available so that it will be tried
+again. The whole idea here is that machines who suffer
+temporary unavailability, such as those on wireless
+networks or at other sites that may lose power, will
+not be chopped completely out of the list pending
+administrator intervention but will still reduce
+preformance hits incurred by continually waiting on
+unavailable hosts.
+
+Building:
+
+Normal Build:
+
+make
+make install
+
+Non-Threaded:
+
+vi Makefile
+
+#uncomment the lines required for threadless build and comment the lines required for threaded build
+
+make
+make install
