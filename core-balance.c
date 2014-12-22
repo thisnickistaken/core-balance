@@ -23,9 +23,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <netdb.h>
-#include "../includes/bitfield.c"
-#include "../includes/parse.c"
-#include "../includes/debug.c"
+#include "includes/bitfield.c"
+#include "includes/parse.c"
+#include "includes/debug.c"
 
 #ifndef _NO_THREADS
 #include <pthread.h>
